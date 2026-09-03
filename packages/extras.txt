@@ -1,0 +1,11 @@
+# Curated extras — packages the CAPTURED CONFIGS need but that weren't
+# installed on the source machine, so `capture.sh` couldn't pick them up.
+# Maintained by hand; capture.sh never overwrites this file.
+# Installed by install.sh after the main package lists.
+
+## Fonts (Ghostty config requests JetBrainsMono Nerd Font)
+ttf-jetbrains-mono-nerd
+
+## Neovim / LazyVim runtime deps (Telescope live-grep, file finding, :checkhealth)
+ripgrep
+fd

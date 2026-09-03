@@ -32,6 +32,10 @@ System-Base, Apps, …). The `#` lines are comments; the installer ignores them.
 - `packages/pacman-all.txt` — **reference only**, the full dependency-inclusive
   list for verification. Never installed directly (doing so would mark every
   dependency as explicit and break orphan detection).
+- `packages/extras.txt` — hand-maintained packages the **captured configs
+  need** but that weren't installed on the source machine (JetBrainsMono Nerd
+  Font for Ghostty; `ripgrep` + `fd` for LazyVim/Telescope). `capture.sh` never
+  touches this file. Installed after the main list.
 - `packages/{npm-global,cargo,go-bin,uv-tools}.txt` — language-level globals,
   **captured but not auto-installed**. Review and install what you want.
 
@@ -41,7 +45,13 @@ Curated set (`.zshrc .zprofile .bashrc .bash_profile .gitconfig` and
 `.config/{git,nvim,ghostty,rofi,wofi,fish,gh,Code/User}`) is **symlinked** from
 this repo into `$HOME`. Anything real already in the way is moved to
 `~/.pre-setup-backup-<timestamp>/` first — nothing is overwritten blindly.
-oh-my-zsh is reinstalled from upstream, not copied.
+oh-my-zsh is reinstalled from upstream, not copied. The two custom zsh plugins
+referenced by `.zshrc` (`zsh-autosuggestions`, `zsh-syntax-highlighting`) are
+git-cloned into `$ZSH_CUSTOM/plugins/` automatically.
+
+**Neovim:** the full LazyVim config ships with `lazy-lock.json`, so on first
+`nvim` launch all plugins install at their pinned versions. `ripgrep`/`fd` (from
+`extras.txt`) back Telescope; Mason installs LSP servers on first run.
 
 ## GNOME
 

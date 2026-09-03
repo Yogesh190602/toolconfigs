@@ -37,6 +37,13 @@ if (( ${#NATIVE[@]} )); then
   run "sudo pacman -S --needed --noconfirm ${NATIVE[*]}"
 fi
 
+# Curated extras the captured configs depend on (Nerd Font, ripgrep, fd…).
+mapfile -t EXTRAS < <(read_pkgs "$PKG/extras.txt")
+if (( ${#EXTRAS[@]} )); then
+  say "Installing ${#EXTRAS[@]} curated extras (config dependencies)…"
+  run "sudo pacman -S --needed --noconfirm ${EXTRAS[*]}"
+fi
+
 # ---------------------------------------------------------------------------
 # 2. yay (AUR helper) — bootstrap, since yay can't install itself
 # ---------------------------------------------------------------------------
@@ -78,6 +85,21 @@ if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
   say "Installing oh-my-zsh…"
   run "RUNZSH=no CHSH=no sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
 fi
+
+# Custom zsh plugins referenced by .zshrc (plugins=(git zsh-autosuggestions
+# zsh-syntax-highlighting)). oh-my-zsh ships neither; clone into $ZSH_CUSTOM.
+ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+declare -A ZSH_PLUGINS=(
+  [zsh-autosuggestions]="https://github.com/zsh-users/zsh-autosuggestions"
+  [zsh-syntax-highlighting]="https://github.com/zsh-users/zsh-syntax-highlighting"
+)
+for name in "${!ZSH_PLUGINS[@]}"; do
+  dest="$ZSH_CUSTOM/plugins/$name"
+  if [[ ! -d "$dest" ]]; then
+    say "Cloning zsh plugin: $name"
+    run "git clone --depth=1 ${ZSH_PLUGINS[$name]} \"$dest\""
+  fi
+done
 
 # ---------------------------------------------------------------------------
 # 6. Dotfiles — symlink into $HOME, backing up anything real that's in the way
