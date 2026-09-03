@@ -1,0 +1,6 @@
+air
+buf
+dlv
+gqlgen
+protoc-gen-go
+protoc-gen-go-grpc

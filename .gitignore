@@ -1,0 +1,4 @@
+# nothing runtime should live here, but guard against accidents
+*.log
+*.tmp
+.DS_Store
