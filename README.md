@@ -5,16 +5,41 @@ GNOME settings. Two scripts:
 
 | Script | Where you run it | What it does |
 |--------|------------------|--------------|
-| `capture.sh` | **this** (source) machine | Snapshots packages, dotfiles, dconf into `packages/`, `dotfiles/`, `dconf/`. Re-run anytime to refresh. |
-| `install.sh` | the **new** machine | Installs everything and symlinks the dotfiles back into `$HOME`. |
+| `capture.sh` | **this** (source) machine | Snapshots packages, dotfiles, dconf into `packages/`, `dotfiles/`, `dconf/`, then regenerates `install.sh`. Re-run anytime to refresh. |
+| `install.sh` | the **new** machine | Installs everything and symlinks the dotfiles back into `$HOME`. **Self-contained** — see below. |
 
 ## Quick start on a new machine
 
+`install.sh` is self-contained — the package lists, every dotfile and the GNOME
+dconf dump are embedded in it. Copy that one file across and run it:
+
 ```bash
-git clone <this-repo> ~/arch-setup && cd ~/arch-setup
+scp install.sh newbox:~/            # or curl it, or put it on a USB stick
+ssh newbox
 ./install.sh --dry-run   # preview every action, changes nothing
 ./install.sh             # do it (run as your normal user, NOT root)
 ```
+
+Cloning the repo works too, and is preferred if you plan to keep editing the
+configs — `install.sh` detects `packages/`, `dotfiles/` and `dconf/` next to it
+and uses those instead of its embedded copy:
+
+```bash
+git clone <this-repo> ~/arch-setup && cd ~/arch-setup && ./install.sh
+```
+
+### How the self-contained mode works
+
+Run standalone, `install.sh` unpacks its embedded files to
+`~/.local/share/arch-setup` (override with `ARCH_SETUP_DIR`) and symlinks your
+dotfiles out of there. **That directory is permanent** — deleting it leaves the
+symlinks in `$HOME` dangling. A `--dry-run` unpacks to a temp dir instead and
+cleans up after itself.
+
+`install.sh` is **generated**. Edit `install-template.sh` for logic and re-run
+`capture.sh`; direct edits to `install.sh` are overwritten. The generator embeds
+each file as a quoted heredoc, restoring empty directories and files captured
+without a trailing newline, and refuses to emit a script that fails `bash -n`.
 
 ## What gets installed
 
@@ -25,13 +50,16 @@ System-Base, Apps, …). The `#` lines are comments; the installer ignores them.
 
 - `packages/pacman-explicit.txt` — native repo packages (installed)
 - `packages/blackarch.txt` — packages from the BlackArch repo; `install.sh`
-  runs the BlackArch `strap.sh` bootstrap first (dirsearch, ffuf, sherlock,
-  enum4linux, stegseek)
-- `packages/aur.txt` — AUR/foreign packages via `yay` (best-effort; junk like
-  `*-debug` and local-only builds are skipped rather than aborting)
+  runs the BlackArch `strap.sh` bootstrap first
+- `packages/aur.txt` — AUR/foreign packages via `yay` (best-effort; a package
+  with no AUR PKGBUILD is skipped rather than aborting)
 - `packages/pacman-all.txt` — **reference only**, the full dependency-inclusive
   list for verification. Never installed directly (doing so would mark every
   dependency as explicit and break orphan detection).
+- `packages/pacman-explicit-flat.txt` — the flat explicit list, filtered the
+  same way as the categorized files so it can be diffed against them without
+  the excluded packages showing up as drift.
+
 - `packages/extras.txt` — hand-maintained packages the **captured configs
   need** but that weren't installed on the source machine (JetBrainsMono Nerd
   Font for Ghostty; `ripgrep` + `fd` for LazyVim/Telescope). `capture.sh` never
@@ -39,10 +67,24 @@ System-Base, Apps, …). The `#` lines are comments; the installer ignores them.
 - `packages/{npm-global,cargo,go-bin,uv-tools}.txt` — language-level globals,
   **captured but not auto-installed**. Review and install what you want.
 
+**Never captured**, because capturing them breaks the install:
+
+- the AUR helper itself (`yay`, `yay-bin`, `paru`, …) — `install.sh` bootstraps
+  `yay-bin` in step 2, and the BlackArch `yay` package conflicts with it, so
+  recording either one aborts the whole pacman transaction
+- `*-debug` packages — local build leftovers with no PKGBUILD to reinstall from
+
+**Conflicts don't abort the run.** A single bad package (an already-installed
+AUR build conflicting with a repo one, say `visual-studio-code-bin` vs `code`)
+would otherwise take down the entire `pacman -S` transaction. So `install.sh`
+tries the fast bulk install, and on failure retries one package at a time,
+then prints what it had to skip.
+
 ## Dotfiles
 
-Curated set (`.zshrc .zprofile .bashrc .bash_profile .gitconfig` and
-`.config/{git,nvim,ghostty,rofi,wofi,fish,gh,Code/User}`) is **symlinked** from
+Curated wish-list (`.zshrc .zprofile .bashrc .bash_profile .gitconfig` and
+`.config/{git,nvim,ghostty,rofi,wofi,fish,gh,Code/User}`) is captured — anything
+absent on the source machine is skipped with a warning — then **symlinked** from
 this repo into `$HOME`. Anything real already in the way is moved to
 `~/.pre-setup-backup-<timestamp>/` first — nothing is overwritten blindly.
 oh-my-zsh is reinstalled from upstream, not copied. The two custom zsh plugins

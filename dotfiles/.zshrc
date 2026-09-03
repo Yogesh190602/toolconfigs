@@ -1,10 +1,5 @@
-
-# Kiro CLI pre block. Keep at the top of this file.
-[[ -f "${HOME}/.local/share/kiro-cli/shell/zshrc.pre.zsh" ]] && builtin source "${HOME}/.local/share/kiro-cli/shell/zshrc.pre.zsh"
-
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
-
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
@@ -74,7 +69,7 @@ ZSH_THEME="cloud"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting zsh-completions)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -106,27 +101,42 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-#
-alias ssh-off='sudo systemctl stop sshd && sudo systemctl disable sshd && sudo systemctl mask sshd'
-alias ssh-on='sudo systemctl unmask sshd && sudo systemctl enable --now sshd'
 
-export PATH="$PATH:$(go env GOPATH)/bin"
+# Rust
+export PATH="$HOME/.cargo/bin:$PATH"
+
+# fnm (Node version manager). The upstream installer drops it in
+# ~/.local/share/fnm; the fnm-bin package puts it in /usr/bin. Support both,
+# and stay quiet if neither is present.
+FNM_PATH="$HOME/.local/share/fnm"
+[ -d "$FNM_PATH" ] && export PATH="$FNM_PATH:$PATH"
+if command -v fnm >/dev/null; then
+  eval "$(fnm env --shell zsh)"
+fi
+
+# CLI aliases
+alias ls="eza --icons"
+alias ll="eza -la --icons --git"
+alias la="eza -a --icons"
+alias cat="bat"
+alias grep="rg"
+alias find="fd"
+alias top="btop"
+
+# VPN & Tor toggles — all disabled by default
+tor-on()   { sudo systemctl start tor && echo "[Tor] Started"; }
+tor-off()  { sudo systemctl stop tor  && echo "[Tor] Stopped"; }
+tor-check() { torsocks curl -s https://check.torproject.org/api/ip; }
+
+# OpenVPN helper — pass your .ovpn file path as argument
+vpn-on()   { [[ -n "$1" ]] && sudo openvpn --config "$1" || echo "Usage: vpn-on /path/to/config.ovpn"; }
+
+# WireGuard helpers — pass interface name (e.g. wg0)
+wg-on()    { [[ -n "$1" ]] && sudo wg-quick up "$1"   || echo "Usage: wg-on <interface>"; }
+wg-off()   { [[ -n "$1" ]] && sudo wg-quick down "$1" || echo "Usage: wg-off <interface>"; }
+wg-status() { sudo wg show; }
+
+# sshd toggles — masked when off, so nothing can pull it back up implicitly
+ssh-on()     { sudo systemctl unmask sshd && sudo systemctl enable --now sshd && echo "[sshd] Enabled and running"; }
+ssh-off()    { sudo systemctl stop sshd && sudo systemctl disable sshd && sudo systemctl mask sshd && echo "[sshd] Stopped, disabled and masked"; }
 export PATH="$HOME/.local/bin:$PATH"
-
-
-
-# Kiro CLI post block. Keep at the bottom of this file.
-[[ -f "${HOME}/.local/share/kiro-cli/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/.local/share/kiro-cli/shell/zshrc.post.zsh"
-
-# bun completions
-[ -s "/home/inkyank-03/.bun/_bun" ] && source "/home/inkyank-03/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# Bun global bin (added by JARVIS installer)
-export PATH="$HOME/.bun/bin:$PATH"
-
-# opencode
-export PATH=/home/inkyank-03/.opencode/bin:$PATH

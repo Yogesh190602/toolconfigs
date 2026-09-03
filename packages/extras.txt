@@ -1,7 +1,8 @@
 # Curated extras — packages the CAPTURED CONFIGS need but that weren't
 # installed on the source machine, so `capture.sh` couldn't pick them up.
 # Maintained by hand; capture.sh never overwrites this file.
-# Installed by install.sh after the main package lists.
+# Installed by install.sh via yay, after the AUR helper is bootstrapped ---
+# some entries (fnm-bin) are AUR-only and pacman cannot install them.
 
 ## Fonts (Ghostty config requests JetBrainsMono Nerd Font)
 ttf-jetbrains-mono-nerd
@@ -9,3 +10,7 @@ ttf-jetbrains-mono-nerd
 ## Neovim / LazyVim runtime deps (Telescope live-grep, file finding, :checkhealth)
 ripgrep
 fd
+
+## Node toolchain (.zshrc initialises fnm; installed to ~/.local/share/fnm by
+## the upstream script, so capture.sh can never see it as a package)
+fnm-bin

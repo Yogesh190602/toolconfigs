@@ -1,2 +1,6 @@
-└── (empty)
+├── @anthropic-ai/claude-code@2.1.218
+├── node-gyp@13.0.2
+├── nopt@10.0.1
+├── npm@12.0.2
+└── semver@7.8.5
 
