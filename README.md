@@ -95,6 +95,51 @@ git-cloned into `$ZSH_CUSTOM/plugins/` automatically.
 `nvim` launch all plugins install at their pinned versions. `ripgrep`/`fd` (from
 `extras.txt`) back Telescope; Mason installs LSP servers on first run.
 
+## zsh theme (`zsh-theme/`)
+
+`zeroday` — a custom oh-my-zsh theme built from artwork, in the image's own
+colours. Prompt is `<cat> dir [branch] ▸`, with a skull on a dirty git tree and
+another on the right carrying any non-zero exit code.
+
+| Path | Installs to | Why |
+|------|-------------|-----|
+| `zeroday.zsh-theme` | `$ZSH_CUSTOM/themes/` | in `custom/`, so `omz update` can't clobber it |
+| `fonts/ZeroDayGlyphs.ttf` | `~/.local/share/fonts/` + `fc-cache` | colour-bitmap (CBDT) font holding the prompt face |
+| `zeroday/` | `~/.local/share/zeroday/` | artwork, renderers, `build.sh` |
+
+**Copied, not symlinked** like the dotfiles: fontconfig only scans real
+directories, and `zeroday-build` rewrites the artwork in place.
+
+**The prompt face is a font glyph, not an emoji.** A terminal can't put an image
+in a prompt — the prompt is redrawn on every keystroke and inline images aren't
+part of the character grid. So the cat is sliced across two Private Use
+codepoints (U+E900/U+E901). A cell is roughly 1:2, so two side by side form one
+square picture, and zsh still measures the prompt as exactly 2 columns.
+`.zshrc` selects them via `ZERODAY_FACE`; set it to an emoji to opt out.
+
+After installing, **fully restart the terminal** (not just a new tab) so it
+rescans fonts. Two empty boxes in the prompt means the font wasn't found.
+
+```
+zeroday                              # banner: half-block artwork + tagline
+zeroday-sticker [rows]               # the real PNG via the Kitty graphics
+                                     # protocol (Ghostty/kitty; else banner)
+zeroday-build <img> [rows] [crop]    # re-skin the theme from any image
+```
+
+Re-skinning needs `imagemagick` (in `extras.txt`). Rebuilding the *font* also
+needs `fonttools` + `pillow` in a venv that is **not** tracked:
+
+```bash
+cd zsh-theme/zeroday
+python -m venv venv && venv/bin/pip install fonttools pillow
+venv/bin/python mkfont.py face.png ZeroDayGlyphs.ttf 2
+```
+
+The theme's PNGs and TTF are binary, which a quoted heredoc can't carry, so the
+generated `install.sh` ships them **base64-encoded** (`_b64file`) while text
+files stay as plain heredocs (`_file`).
+
 ## GNOME
 
 `dconf/gnome.ini` holds dumps of `/org/gnome/desktop/`,

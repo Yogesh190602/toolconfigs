@@ -77,6 +77,7 @@ fi
 PKG="$ROOT/packages"
 DOT="$ROOT/dotfiles"
 DCONF="$ROOT/dconf"
+THEME="$ROOT/zsh-theme"
 
 # Read a categorized package file: drop blank lines and #-comments.
 read_pkgs() { grep -vE '^\s*#' "$1" 2>/dev/null | grep -vE '^\s*$' || true; }
@@ -190,6 +191,27 @@ for name in "${!ZSH_PLUGINS[@]}"; do
 done
 
 # ---------------------------------------------------------------------------
+# 5b. zeroday zsh theme (theme file, colour-bitmap font, artwork + helpers).
+#     COPIED, not symlinked like the dotfiles: fontconfig only scans real
+#     directories, and `zeroday-build` rewrites the artwork in place when the
+#     theme is re-skinned. Neither works through a link into a repo checkout.
+# ---------------------------------------------------------------------------
+if [[ -d "$THEME" ]]; then
+  say "Installing zeroday zsh theme…"
+  run "mkdir -p \"$ZSH_CUSTOM/themes\" \"$HOME/.local/share/fonts\" \"$HOME/.local/share/zeroday\" \"$HOME/.local/bin\""
+  run "cp -a \"$THEME/zeroday.zsh-theme\" \"$ZSH_CUSTOM/themes/\""
+  if [[ -f "$THEME/fonts/ZeroDayGlyphs.ttf" ]]; then
+    run "cp -a \"$THEME/fonts/ZeroDayGlyphs.ttf\" \"$HOME/.local/share/fonts/\""
+    # Skip this and the prompt face renders as two empty boxes.
+    run "fc-cache -f \"$HOME/.local/share/fonts\" >/dev/null"
+  fi
+  if [[ -d "$THEME/zeroday" ]]; then
+    run "cp -a \"$THEME/zeroday/.\" \"$HOME/.local/share/zeroday/\""
+    run "ln -sfn \"$HOME/.local/share/zeroday/build.sh\" \"$HOME/.local/bin/zeroday-build\""
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # 6. Dotfiles — symlink into $HOME, backing up anything real that's in the way
 # ---------------------------------------------------------------------------
 STAMP="$(date +%s)"
@@ -283,6 +305,11 @@ cat <<EOF
   - Change your login shell to zsh:   chsh -s /usr/bin/zsh
   - Docker group (log out/in after):  sudo usermod -aG docker "\$USER"
   - Reboot to pick up GNOME/dconf and services.
+  - zsh theme "zeroday": fully restart the terminal (not just a new tab) so it
+    rescans fonts. Two empty boxes in the prompt = the font was not found.
+      zeroday                    banner
+      zeroday-sticker [rows]     the real artwork (Ghostty/kitty)
+      zeroday-build <img> [rows] [crop]   re-skin from any image
 EOF
 
 if (( UNPACKED )); then

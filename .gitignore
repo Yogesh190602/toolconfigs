@@ -2,3 +2,7 @@
 *.log
 *.tmp
 .DS_Store
+
+# zeroday theme: local python venv + regenerable intermediate art
+zsh-theme/zeroday/venv/
+zsh-theme/zeroday/art.png

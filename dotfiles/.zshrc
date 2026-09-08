@@ -7,7 +7,11 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time Oh My Zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="cloud"
+ZSH_THEME="zeroday"
+# Prompt face. The two Private Use codepoints are slices of the artwork,
+# supplied by ~/.local/share/fonts/ZeroDayGlyphs.ttf (colour bitmap font).
+# Set to an emoji (e.g. '😾') to go back to a plain glyph.
+ZERODAY_FACE=$'\ue900\ue901'
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load

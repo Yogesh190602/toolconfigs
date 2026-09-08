@@ -14,3 +14,7 @@ fd
 ## Node toolchain (.zshrc initialises fnm; installed to ~/.local/share/fnm by
 ## the upstream script, so capture.sh can never see it as a package)
 fnm-bin
+
+## zeroday zsh theme — only needed to RE-SKIN it (`zeroday-build <image>`);
+## the shipped artwork and font work without it.
+imagemagick
